@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>トランプ王国</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height: 100vh;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    .game-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 5px;
+      text-shadow: 0 0 20px rgba(255,215,0,0.5);
+      background: linear-gradient(90deg, #ffd700, #fff, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+
+    /* ステータスバー */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(50,50,80,0.6));
+      padding: 12px 20px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255,215,0,0.2);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .kingdom-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .kingdom-level {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 10px rgba(240,147,251,0.3);
+    }
+
+    .resources {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .resource {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9rem;
+    }
+
+    .resource-value {
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    /* アイテム表示 */
+    .item-slot {
+      background: linear-gradient(135deg, rgba(255,100,100,0.3), rgba(200,50,50,0.4));
+      padding: 4px 12px;
+      border-radius: 15px;
+      border: 1px solid rgba(255,100,100,0.4);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .item-slot:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(255,100,100,0.5);
+    }
+
+    .item-slot.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .item-slot.active {
+      background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,165,0,0.5));
+      border-color: #ffd700;
+      box-shadow: 0 0 15px rgba(255,215,0,0.5);
+    }
+
+    /* 敵エリア */
+    .enemy-area {
+      background: linear-gradient(135deg, rgba(139,0,0,0.3), rgba(80,20,20,0.4));
+      border: 2px solid rgba(255,100,100,0.3);
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .enemy-area::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(255,0,0,0.1), transparent 70%);
+      pointer-events: none;
+    }
+
+    .enemy-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .enemy-name {
+      font-size: 1.3rem;
+      color: #ff6b6b;
+      text-shadow: 0 0 10px rgba(255,100,100,0.5);
+    }
+
+    .enemy-hp {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hp-bar {
+      width: 150px;
+      height: 18px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 9px;
+      overflow: hidden;
+      border: 1px solid rgba(255,100,100,0.3);
+    }
+
+    .hp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff416c, #ff4b2b);
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px rgba(255,65,108,0.5);
+    }
+
+    .enemy-cards-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* カード共通 */
+    .card {
+      width: 60px;
+      height: 88px;
+      background: white;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      transition: all 0.3s ease;
+      position: relative;
+      border: 2px solid transparent;
+    }
+
+    .card.small {
+      width: 40px;
+      height: 58px;
+      font-size: 0.8rem;
+    }
+
+    .card.small .number {
+      font-size: 1rem;
+    }
+
+    .card.small .suit {
+      font-size: 0.7rem;
+    }
+
+    .card.hearts, .card.diamonds {
+      color: #e74c3c;
+    }
+
+    .card.spades, .card.clubs {
+      color: #2c3e50;
+    }
+
+    .card .suit {
+      font-size: 1rem;
+    }
+
+    .card .number {
+      font-size: 1.5rem;
+    }
+
+    .card.joker {
+      background: linear-gradient(135deg, #ff6b6b, #ffd700, #51cf66, #339af0);
+      color: #000;
+      animation: jokerGlow 2s infinite;
+    }
+
+    @keyframes jokerGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.8); }
+      50% { box-shadow: 0 0 30px rgba(255,107,107,0.8); }
+    }
+
+    .card.joker .number {
+      font-size: 0.9rem;
+    }
+
+    .card.face-down {
+      background: linear-gradient(135deg, #1a1a3e, #2d2d5a);
+      border: 2px solid rgba(255,100,100,0.3);
+    }
+
+    .card.face-down::before {
+      content: '?';
+      font-size: 2rem;
+      color: rgba(255,100,100,0.5);
+    }
+
+    .card.small.face-down::before {
+      font-size: 1.2rem;
+    }
+
+    .card.face-down .number,
+    .card.face-down .suit {
+      display: none;
+    }
+
+    /* 使用済みカード */
+    .card.exhausted {
+      opacity: 0.4;
+      filter: grayscale(80%);
+      cursor: not-allowed !important;
+      transform: scale(0.95);
+    }
+
+    .card.exhausted::after {
+      content: '💤';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      font-size: 0.8rem;
+    }
+
+    /* バトルエリア */
+    .battle-area {
+      background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.05));
+      border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 15px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      display: none;
+    }
+
+    .battle-area.active {
+      display: block;
+      animation: battleAreaAppear 0.3s ease;
+    }
+
+    @keyframes battleAreaAppear {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .battle-area::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255,215,0,0.1), transparent);
+      pointer-events: none;
+    }
+
+    .battle-title {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    }
+
+    .battle-field {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 15px;
+    }
+
+    .battle-side {
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .battle-side-label {
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .battle-side-label.ally {
+      color: #51cf66;
+    }
+
+    .battle-side-label.enemy {
+      color: #ff6b6b;
+    }
+
+    .battle-cards {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      min-height: 100px;
+      min-width: 80px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 10px;
+      align-items: center;
+    }
+
+    .battle-total {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-top: 10px;
+      text-shadow: 0 0 15px currentColor;
+    }
+
+    .battle-total.ally {
+      color: #51cf66;
+    }
+
+    .battle-total.enemy {
+      color: #ff6b6b;
+    }
+
+    .vs-text {
+      font-size: 2.5rem;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255,215,0,0.8);
+      animation: vsPulse 1s infinite;
+    }
+
+    @keyframes vsPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .result {
+      font-size: 1.8rem;
+      font-weight: bold;
+      min-height: 40px;
+      text-shadow: 0 0 20px currentColor;
+    }
+
+    .result.win {
+      color: #51cf66;
+      animation: winAnim 0.5s ease;
+    }
+
+    .result.lose {
+      color: #ff6b6b;
+      animation: loseAnim 0.5s ease;
+    }
+
+    @keyframes winAnim {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes loseAnim {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+
+    /* 前回のバトル結果（コンパクト表示） */
+    .last-battle {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 8px 15px;
+      margin-bottom: 15px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      font-size: 0.9rem;
+    }
+
+    .last-battle.active {
+      display: flex;
+    }
+
+    .last-battle-cards {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .last-battle-result {
+      font-weight: bold;
+      padding: 3px 10px;
+      border-radius: 10px;
+    }
+
+    .last-battle-result.win {
+      background: rgba(81,207,102,0.3);
+      color: #51cf66;
+    }
+
+    .last-battle-result.lose {
+      background: rgba(255,107,107,0.3);
+      color: #ff6b6b;
+    }
+
+    .last-battle-result.draw {
+      background: rgba(255,215,0,0.3);
+      color: #ffd700;
+    }
+
+    /* メッセージ */
+    .message {
+      text-align: center;
+      padding: 10px 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* プレイヤーエリア */
+    .player-area {
+      background: linear-gradient(135deg, rgba(81,207,102,0.15), rgba(50,100,80,0.2));
+      border: 2px solid rgba(81,207,102,0.3);
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .player-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .player-name {
+      font-size: 1.1rem;
+      color: #51cf66;
+    }
+
+    .selected-info {
+      background: rgba(255,215,0,0.2);
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255,215,0,0.3);
+    }
+
+    .power-info {
+      margin-left: auto;
+      background: rgba(81,207,102,0.2);
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 0.85rem;
+    }
+
+    .cards {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-height: 100px;
+      justify-content: center;
+    }
+
+    /* 選択可能カード */
+    .selectable {
+      cursor: pointer;
+    }
+
+    .selectable:hover:not(.exhausted) {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 25px rgba(255,215,0,0.4);
+      border-color: rgba(255,215,0,0.5);
+    }
+
+    .selected {
+      transform: translateY(-12px) scale(1.05);
+      border-color: #ffd700 !important;
+      box-shadow: 0 0 25px rgba(255,215,0,0.6);
+    }
+
+    /* コントロール（手札の上に配置） */
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    /* ボタン */
+    button {
+      padding: 12px 24px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(102,126,234,0.6);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #cb2d3e, #ef473a);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .btn-item {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+    }
+
+    .btn-item.active {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      box-shadow: 0 0 15px rgba(255,215,0,0.5);
+    }
+
+    /* バトルログ */
+    .battle-log {
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      padding: 10px;
+      max-height: 80px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      margin-top: 15px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .log-entry {
+      padding: 2px 0;
+      opacity: 0.9;
+    }
+
+    .log-good { color: #51cf66; }
+    .log-bad { color: #ff6b6b; }
+    .log-event { color: #ffd700; }
+
+    /* イベントモーダル */
+    .event-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .event-modal.active {
+      display: flex;
+    }
+
+    .event-content {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 3px solid #ffd700;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 450px;
+      text-align: center;
+      animation: modalPop 0.4s ease;
+      box-shadow: 0 0 50px rgba(255,215,0,0.3);
+    }
+
+    @keyframes modalPop {
+      0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    .event-icon {
+      font-size: 4rem;
+      margin-bottom: 15px;
+      animation: eventIconBounce 0.6s ease;
+    }
+
+    @keyframes eventIconBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .event-title {
+      font-size: 1.6rem;
+      color: #ffd700;
+      margin-bottom: 15px;
+    }
+
+    .event-description {
+      font-size: 1rem;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      color: #ccc;
+    }
+
+    .event-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* 勝利/敗北画面 */
+    .victory-screen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .victory-screen.active {
+      display: flex;
+    }
+
+    .victory-content {
+      text-align: center;
+      animation: victoryAnim 1s ease;
+    }
+
+    @keyframes victoryAnim {
+      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+      50% { transform: scale(1.2) rotate(10deg); }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    .victory-content h2 {
+      font-size: 2.5rem;
+      color: #ffd700;
+      margin-bottom: 20px;
+      text-shadow: 0 0 30px rgba(255,215,0,0.8);
+    }
+
+    .victory-content p {
+      font-size: 1.2rem;
+      margin-bottom: 25px;
+      color: #ccc;
+    }
+
+    /* バトルアニメーション */
+    .card.damaged {
+      animation: damagedAnim 0.5s ease;
+    }
+
+    @keyframes damagedAnim {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(2) hue-rotate(30deg); }
+    }
+
+    .card.appear {
+      animation: cardAppear 0.4s ease forwards;
+    }
+
+    @keyframes cardAppear {
+      0% { transform: scale(0) rotateY(180deg); opacity: 0; }
+      100% { transform: scale(1) rotateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>👑 トランプ王国 👑</h1>
+    <p class="subtitle">カードを選んで敵を倒せ！北の王国を目指して...</p>
+
+    <!-- ステータスバー -->
+    <div class="status-bar">
+      <div class="kingdom-status">
+        <span class="kingdom-level" id="kingdom-level">🏠 村</span>
+        <span id="kingdom-name">はじまりの村</span>
+      </div>
+      <div class="resources">
+        <div class="resource">
+          <span>⭐</span>
+          <span>名声: <span class="resource-value" id="fame">0</span></span>
+        </div>
+        <div class="resource">
+          <span>🃏</span>
+          <span>手札: <span class="resource-value" id="card-count">0</span></span>
+        </div>
+        <div class="resource">
+          <span>🏆</span>
+          <span>勝利: <span class="resource-value" id="wins">0</span></span>
+        </div>
+        <div class="resource">
+          <span class="item-slot" id="item-slot" onclick="toggleItem()" title="クリックで使用ON/OFF">
+            🗡️ 援軍の書: <span id="item-count">2</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 敵エリア -->
+    <div class="enemy-area" id="enemy-area">
+      <div class="enemy-header">
+        <span class="enemy-name" id="enemy-name">⚔️ 敵</span>
+        <div class="enemy-hp">
+          <span>HP</span>
+          <div class="hp-bar">
+            <div class="hp-fill" id="enemy-hp-fill" style="width: 100%;"></div>
+          </div>
+          <span id="enemy-hp-text">3/3</span>
+        </div>
+      </div>
+      <div class="enemy-cards-container" id="enemy-cards"></div>
+    </div>
+
+    <!-- 前回のバトル結果（コンパクト表示） -->
+    <div class="last-battle" id="last-battle">
+      <span>前回:</span>
+      <div class="last-battle-cards" id="last-battle-my"></div>
+      <span>vs</span>
+      <div class="last-battle-cards" id="last-battle-enemy"></div>
+      <span class="last-battle-result" id="last-battle-result">勝利</span>
+    </div>
+
+    <!-- バトルエリア（バトル時のみ表示） -->
+    <div class="battle-area" id="battle-area">
+      <div class="battle-title">⚔️ バトル ⚔️</div>
+      <div class="battle-field">
+        <div class="battle-side">
+          <div class="battle-side-label ally">あなた</div>
+          <div class="battle-cards" id="battle-my-cards"></div>
+          <div class="battle-total ally" id="my-total"></div>
+        </div>
+        <div class="vs-text">⚔️</div>
+        <div class="battle-side">
+          <div class="battle-side-label enemy">敵</div>
+          <div class="battle-cards" id="battle-enemy-cards"></div>
+          <div class="battle-total enemy" id="enemy-total"></div>
+        </div>
+      </div>
+      <div id="result" class="result"></div>
+    </div>
+
+    <div id="message" class="message">カードを選んでバトル！</div>
+
+    <!-- コントロール（手札の上に配置） -->
+    <div class="controls">
+      <button class="btn-primary" id="battle-btn" onclick="battle()">⚔️ バトル！</button>
+      <button class="btn-item" id="item-btn" onclick="toggleItem()">🗡️ 援軍 <span id="item-btn-count">2</span></button>
+      <button class="btn-secondary" onclick="clearSelection()">選択解除</button>
+      <button class="btn-secondary" onclick="newGame()">🆕 最初から</button>
+    </div>
+
+    <!-- 自分の手札 -->
+    <div class="player-area">
+      <div class="player-header">
+        <span class="player-name">👦 あなたの手札</span>
+        <span class="selected-info">選択: <span id="selected-count">0</span> / <span id="required-cards">1</span></span>
+        <span class="power-info">選択中: <span id="selected-power">0</span></span>
+      </div>
+      <div class="cards" id="my-cards"></div>
+    </div>
+
+    <!-- バトルログ -->
+    <div class="battle-log" id="battle-log"></div>
+  </div>
+
+  <!-- イベントモーダル -->
+  <div class="event-modal" id="event-modal">
+    <div class="event-content">
+      <div class="event-icon" id="event-icon">🎭</div>
+      <div class="event-title" id="event-title">イベント発生！</div>
+      <div class="event-description" id="event-description">何かが起きた...</div>
+      <div class="event-buttons" id="event-buttons"></div>
+    </div>
+  </div>
+
+  <!-- 勝利画面 -->
+  <div class="victory-screen" id="victory-screen">
+    <div class="victory-content">
+      <h2>🎊 祝・統一 🎊</h2>
+      <p>北の王国の女王を打ち破り、<br>大陸を統一しました！</p>
+      <button class="btn-success" onclick="newGame()">もう一度プレイ</button>
+    </div>
+  </div>
+
+  <!-- ゲームオーバー画面 -->
+  <div class="victory-screen" id="gameover-screen">
+    <div class="victory-content">
+      <h2 style="color: #ff6b6b;">💀 王国滅亡 💀</h2>
+      <p id="gameover-text">手札が尽き、王国は滅びた...</p>
+      <button class="btn-danger" onclick="newGame()">もう一度挑戦</button>
+    </div>
+  </div>
+
+  <script>
+    // ゲーム状態
+    let game = {
+      fame: 0,
+      wins: 0,
+      kingdomLevel: 0,
+      myCards: [],
+      selectedCards: [],
+      exhaustedCards: [],
+      enemy: null,
+      enemyHP: 0,
+      enemyMaxHP: 0,
+      enemyCards: [],
+      battleLog: [],
+      itemCount: 2, // 援軍の書の残り回数
+      itemActive: false, // 援軍の書を使用するか
+      lastBattle: null // 前回のバトル結果
+    };
+
+    const kingdomLevels = [
+      { name: '村', icon: '🏠', title: 'はじまりの村', fameRequired: 0 },
+      { name: '街', icon: '🏘️', title: '発展する街', fameRequired: 15 },
+      { name: '国', icon: '🏰', title: '栄光の王国', fameRequired: 35 }
+    ];
+
+    // バランス調整済み敵データ
+    const enemies = {
+      thief: { name: '盗賊', icon: '🥷', hp: 1, cardCount: 1, cardRange: [2, 5], fame: 2 },
+      bandit: { name: '山賊', icon: '🗡️', hp: 2, cardCount: 1, cardRange: [3, 7], fame: 3 },
+      wolves: { name: '狼の群れ', icon: '🐺', hp: 2, cardCount: 2, cardRange: [2, 5], fame: 4 },
+      bandits: { name: '山賊団', icon: '⚔️', hp: 2, cardCount: 2, cardRange: [3, 6], fame: 5 },
+      knight: { name: '騎士', icon: '🛡️', hp: 2, cardCount: 1, cardRange: [6, 9], fame: 4 },
+      knights: { name: '騎士団', icon: '🏇', hp: 3, cardCount: 3, cardRange: [4, 7], fame: 7 },
+      dragon: { name: 'ドラゴン', icon: '🐉', hp: 3, cardCount: 2, cardRange: [6, 10], fame: 9 },
+      northKing: { name: '北の王国の女王', icon: '👑', hp: 3, cardCount: 2, cardRange: [8, 12], hasJoker: true, fame: 0, isBoss: true }
+    };
+
+    // イベントデータ
+    const events = [
+      {
+        id: 'adventurer',
+        icon: '⚔️',
+        title: '旅の冒険者が現れた！',
+        description: '強力な冒険者があなたの噂を聞きつけてやってきました。',
+        choices: [
+          { text: '✅ 仲間にする (強カード+1)', action: () => {
+            const num = Math.floor(Math.random() * 4) + 10;
+            game.myCards.push(createCard(num));
+            return `強力な冒険者(${num})が仲間になった！`;
+          }},
+          { text: '❌ 断る', action: () => '冒険者は去っていった...' }
+        ]
+      },
+      {
+        id: 'hero',
+        icon: '🦸',
+        title: '伝説の英雄が現れた！',
+        description: '「私の剣を貸そう...」伝説の英雄があなたに力を貸してくれます。',
+        choices: [
+          { text: '✅ 力を借りる (A獲得)', action: () => {
+            game.myCards.push(createCard(1));
+            return '伝説の英雄(A)が仲間になった！';
+          }}
+        ]
+      },
+      {
+        id: 'merchant_item',
+        icon: '📜',
+        title: '魔法商人が現れた！',
+        description: '「特別なアイテムをお譲りしましょう...」援軍の書を売ってくれます。',
+        choices: [
+          { text: '✅ 買う (援軍+1)', action: () => {
+            game.itemCount++;
+            return '援軍の書を手に入れた！';
+          }},
+          { text: '❌ 断る', action: () => '商人は去っていった...' }
+        ]
+      },
+      {
+        id: 'traveler',
+        icon: '🧳',
+        title: '旅人が現れた！',
+        description: '旅の剣士たちがあなたの元を訪れました。',
+        choices: [
+          { text: '✅ 仲間にする (+2枚)', action: () => { addRandomCards(2); return '新しい仲間が2人加わった！'; } },
+          { text: '❌ 断る', action: () => '旅人は去っていった...' }
+        ]
+      },
+      {
+        id: 'blacksmith',
+        icon: '⚒️',
+        title: '鍛冶屋が来た！',
+        description: '腕利きの鍛冶屋が訪れました。「武器を強化しよう！」',
+        choices: [
+          { text: '✅ 強化する (2枚を+3)', action: () => { upgradeCards(2, 3); return 'カードが強化された！'; } },
+          { text: '❌ 断る', action: () => '鍛冶屋は去っていった...' }
+        ]
+      },
+      {
+        id: 'festival',
+        icon: '🎉',
+        title: '収穫祭！',
+        description: '村で収穫祭が行われています。皆の士気が上がる！',
+        choices: [
+          { text: '🎊 祝う (+3名声, +1枚)', action: () => { game.fame += 3; addRandomCards(1); return '名声が上がり、仲間も増えた！'; } }
+        ]
+      },
+      {
+        id: 'rest',
+        icon: '🏕️',
+        title: '休息の時',
+        description: '穏やかな日が続き、兵士たちが回復しました。',
+        choices: [
+          { text: '😴 休む (疲労回復)', action: () => {
+            game.exhaustedCards = [];
+            return '全員の疲労が回復した！';
+          }}
+        ]
+      },
+      {
+        id: 'merchant',
+        icon: '💰',
+        title: '商人が現れた！',
+        description: '「良いカードがありますよ...」',
+        choices: [
+          { text: '✅ 交換 (弱2枚→強1枚)', action: () => { tradeCards(); return 'カードを交換した！'; } },
+          { text: '❌ 断る', action: () => '商人は去っていった...' }
+        ]
+      },
+      {
+        id: 'storm',
+        icon: '🌪️',
+        title: '嵐が来た！',
+        description: '激しい嵐が襲いました...',
+        choices: [
+          { text: '😰 耐える (-1枚)', action: () => { removeWeakestCard(); return '嵐で仲間を失った...'; } }
+        ]
+      }
+    ];
+
+    const suits = ['hearts', 'diamonds', 'spades', 'clubs'];
+    const suitSymbols = { hearts: '♥', diamonds: '♦', spades: '♠', clubs: '♣' };
+
+    function getCardPower(card) {
+      if (card.isJoker) return 15;
+      if (card.number === 1) return 14;
+      return card.number;
+    }
+
+    function getCardDisplay(card) {
+      if (card.isJoker) return '🃏';
+      if (card.number === 1) return 'A';
+      if (card.number === 11) return 'J';
+      if (card.number === 12) return 'Q';
+      if (card.number === 13) return 'K';
+      return card.number;
+    }
+
+    function createCard(number, isJoker = false) {
+      if (isJoker) return { isJoker: true, number: 15 };
+      const suit = suits[Math.floor(Math.random() * suits.length)];
+      return { suit, number, isJoker: false };
+    }
+
+    function createRandomCard(min = 2, max = 10) {
+      const num = Math.floor(Math.random() * (max - min + 1)) + min;
+      return createCard(num);
+    }
+
+    function addRandomCards(count) {
+      for (let i = 0; i < count; i++) {
+        game.myCards.push(createRandomCard(3, 9));
+      }
+    }
+
+    function removeWeakestCard() {
+      if (game.myCards.length <= 1) return;
+      let minIdx = 0;
+      let minPower = getCardPower(game.myCards[0]);
+      for (let i = 1; i < game.myCards.length; i++) {
+        const power = getCardPower(game.myCards[i]);
+        if (power < minPower) {
+          minPower = power;
+          minIdx = i;
+        }
+      }
+      game.myCards.splice(minIdx, 1);
+      game.exhaustedCards = game.exhaustedCards
+        .filter(idx => idx !== minIdx)
+        .map(idx => idx > minIdx ? idx - 1 : idx);
+    }
+
+    function upgradeCards(count, amount) {
+      const upgradeable = game.myCards
+        .map((c, i) => ({ card: c, index: i }))
+        .filter(x => !x.card.isJoker && getCardPower(x.card) <= 11)
+        .slice(0, count);
+
+      upgradeable.forEach(x => {
+        game.myCards[x.index].number = Math.min(13, game.myCards[x.index].number + amount);
+      });
+    }
+
+    function tradeCards() {
+      if (game.myCards.length < 2) return;
+      for (let i = 0; i < 2; i++) {
+        removeWeakestCard();
+      }
+      game.myCards.push(createRandomCard(9, 12));
+    }
+
+    function createInitialDeck() {
+      const deck = [];
+      for (let num = 2; num <= 9; num++) {
+        deck.push(createCard(num));
+      }
+      return shuffle(deck);
+    }
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function createCardHTML(card, selectable = false, index = -1, isSelected = false, faceDown = false, isExhausted = false, animate = false, small = false) {
+      const sizeClass = small ? 'small' : '';
+
+      if (faceDown) {
+        return `<div class="card face-down ${sizeClass} ${animate ? 'appear' : ''}"></div>`;
+      }
+
+      const exhaustedClass = isExhausted ? 'exhausted' : '';
+      const animateClass = animate ? 'appear' : '';
+
+      if (card.isJoker) {
+        const classes = ['card', 'joker', sizeClass, exhaustedClass, animateClass].filter(c => c);
+        if (selectable && !isExhausted) classes.push('selectable');
+        if (isSelected) classes.push('selected');
+        return `
+          <div class="${classes.join(' ')}"
+               ${selectable && !isExhausted ? `onclick="toggleCard(${index})"` : ''}>
+            <span class="number">JKR</span>
+            <span class="suit">👑</span>
+          </div>
+        `;
+      }
+
+      const displayNum = getCardDisplay(card);
+      const classes = ['card', card.suit, sizeClass, exhaustedClass, animateClass].filter(c => c);
+      if (selectable && !isExhausted) classes.push('selectable');
+      if (isSelected) classes.push('selected');
+
+      return `
+        <div class="${classes.join(' ')}"
+             ${selectable && !isExhausted ? `onclick="toggleCard(${index})"` : ''}>
+          <span class="number">${displayNum}</span>
+          <span class="suit">${suitSymbols[card.suit]}</span>
+        </div>
+      `;
+    }
+
+    function calculatePower(cards) {
+      return cards.reduce((sum, card) => sum + getCardPower(card), 0);
+    }
+
+    function spawnEnemy() {
+      let enemyType;
+
+      if (game.fame >= 45 && game.kingdomLevel >= 2) {
+        enemyType = 'northKing';
+      } else if (game.fame >= 30) {
+        enemyType = ['knights', 'dragon'][Math.floor(Math.random() * 2)];
+      } else if (game.fame >= 15) {
+        enemyType = ['bandits', 'knight', 'wolves'][Math.floor(Math.random() * 3)];
+      } else {
+        enemyType = ['thief', 'bandit', 'wolves'][Math.floor(Math.random() * 3)];
+      }
+
+      const enemyData = enemies[enemyType];
+      game.enemy = { ...enemyData, type: enemyType };
+      game.enemyMaxHP = enemyData.hp;
+      game.enemyHP = enemyData.hp;
+
+      generateEnemyCards();
+      updateEnemyDisplay();
+      render();
+
+      if (enemyData.isBoss) {
+        addLog(`👑 ${enemyData.name}が現れた！最終決戦！`, 'event');
+      } else {
+        addLog(`${enemyData.icon} ${enemyData.name}が現れた！`, 'event');
+      }
+    }
+
+    function generateEnemyCards() {
+      game.enemyCards = [];
+      const [min, max] = game.enemy.cardRange;
+
+      for (let i = 0; i < game.enemy.cardCount; i++) {
+        game.enemyCards.push(createRandomCard(min, max));
+      }
+
+      if (game.enemy.hasJoker && Math.random() < 0.25) {
+        game.enemyCards[Math.floor(Math.random() * game.enemyCards.length)] = createCard(0, true);
+      }
+    }
+
+    function updateEnemyDisplay() {
+      if (!game.enemy) return;
+      document.getElementById('enemy-name').textContent = `${game.enemy.icon} ${game.enemy.name}`;
+      document.getElementById('enemy-hp-text').textContent = `${game.enemyHP}/${game.enemyMaxHP}`;
+      document.getElementById('enemy-hp-fill').style.width = `${(game.enemyHP / game.enemyMaxHP) * 100}%`;
+
+      document.getElementById('enemy-cards').innerHTML =
+        game.enemyCards.map(() => createCardHTML({}, false, -1, false, true, false, true)).join('');
+
+      // 援軍使用時は+1枚出せる
+      const baseRequired = game.enemy.cardCount;
+      const required = game.itemActive ? baseRequired + 1 : baseRequired;
+      document.getElementById('required-cards').textContent = required;
+    }
+
+    function toggleItem() {
+      if (game.itemCount <= 0) {
+        document.getElementById('message').textContent = '⚠️ 援軍の書がありません！';
+        return;
+      }
+
+      game.itemActive = !game.itemActive;
+
+      // 選択をリセット（必要枚数が変わるため）
+      game.selectedCards = [];
+
+      updateItemDisplay();
+      updateEnemyDisplay();
+      render();
+
+      if (game.itemActive) {
+        document.getElementById('message').textContent = '🗡️ 援軍発動！1枚多く出せます！';
+      } else {
+        document.getElementById('message').textContent = 'カードを選んでバトル！';
+      }
+    }
+
+    function updateItemDisplay() {
+      document.getElementById('item-count').textContent = game.itemCount;
+      document.getElementById('item-btn-count').textContent = game.itemCount;
+
+      const itemSlot = document.getElementById('item-slot');
+      const itemBtn = document.getElementById('item-btn');
+
+      if (game.itemCount <= 0) {
+        itemSlot.classList.add('disabled');
+        itemBtn.disabled = true;
+      } else {
+        itemSlot.classList.remove('disabled');
+        itemBtn.disabled = false;
+      }
+
+      if (game.itemActive) {
+        itemSlot.classList.add('active');
+        itemBtn.classList.add('active');
+      } else {
+        itemSlot.classList.remove('active');
+        itemBtn.classList.remove('active');
+      }
+    }
+
+    function render() {
+      const availableCount = game.myCards.filter((_, i) => !game.exhaustedCards.includes(i)).length;
+
+      document.getElementById('my-cards').innerHTML =
+        game.myCards.map((card, i) => {
+          const isSelected = game.selectedCards.includes(i);
+          const isExhausted = game.exhaustedCards.includes(i);
+          return createCardHTML(card, true, i, isSelected, false, isExhausted);
+        }).join('');
+
+      const selectedPower = game.selectedCards.reduce((sum, i) => sum + getCardPower(game.myCards[i]), 0);
+      document.getElementById('selected-power').textContent = selectedPower;
+      document.getElementById('card-count').textContent = `${availableCount}/${game.myCards.length}`;
+      document.getElementById('selected-count').textContent = game.selectedCards.length;
+
+      document.getElementById('fame').textContent = game.fame;
+      document.getElementById('wins').textContent = game.wins;
+
+      updateKingdomLevel();
+      updateItemDisplay();
+
+      // 必要枚数
+      const baseRequired = game.enemy ? game.enemy.cardCount : 1;
+      const required = game.itemActive ? baseRequired + 1 : baseRequired;
+      document.getElementById('battle-btn').disabled = game.selectedCards.length !== required;
+
+      // 前回のバトル結果表示
+      updateLastBattle();
+    }
+
+    function updateLastBattle() {
+      const lastBattleEl = document.getElementById('last-battle');
+      if (!game.lastBattle) {
+        lastBattleEl.classList.remove('active');
+        return;
+      }
+
+      lastBattleEl.classList.add('active');
+
+      document.getElementById('last-battle-my').innerHTML =
+        game.lastBattle.myCards.map(card => createCardHTML(card, false, -1, false, false, false, false, true)).join('');
+
+      document.getElementById('last-battle-enemy').innerHTML =
+        game.lastBattle.enemyCards.map(card => createCardHTML(card, false, -1, false, false, false, false, true)).join('');
+
+      const resultEl = document.getElementById('last-battle-result');
+      resultEl.textContent = `${game.lastBattle.myTotal} vs ${game.lastBattle.enemyTotal}`;
+      resultEl.className = 'last-battle-result ' + game.lastBattle.result;
+    }
+
+    function updateKingdomLevel() {
+      let newLevel = 0;
+      for (let i = kingdomLevels.length - 1; i >= 0; i--) {
+        if (game.fame >= kingdomLevels[i].fameRequired) {
+          newLevel = i;
+          break;
+        }
+      }
+
+      if (newLevel > game.kingdomLevel) {
+        game.kingdomLevel = newLevel;
+        addLog(`🎉 王国が「${kingdomLevels[newLevel].name}」に発展！`, 'event');
+      }
+
+      const level = kingdomLevels[game.kingdomLevel];
+      document.getElementById('kingdom-level').textContent = `${level.icon} ${level.name}`;
+      document.getElementById('kingdom-name').textContent = level.title;
+    }
+
+    function toggleCard(index) {
+      if (game.exhaustedCards.includes(index)) return;
+
+      const pos = game.selectedCards.indexOf(index);
+      const baseRequired = game.enemy ? game.enemy.cardCount : 1;
+      const requiredCards = game.itemActive ? baseRequired + 1 : baseRequired;
+
+      if (pos === -1) {
+        if (game.selectedCards.length < requiredCards) {
+          game.selectedCards.push(index);
+        }
+      } else {
+        game.selectedCards.splice(pos, 1);
+      }
+      render();
+    }
+
+    function clearSelection() {
+      game.selectedCards = [];
+      render();
+    }
+
+    async function battle() {
+      const baseRequired = game.enemy.cardCount;
+      const requiredCards = game.itemActive ? baseRequired + 1 : baseRequired;
+
+      if (game.selectedCards.length !== requiredCards) {
+        document.getElementById('message').textContent = `⚠️ ${requiredCards}枚のカードを選んでください！`;
+        return;
+      }
+
+      // バトルボタンを無効化
+      document.getElementById('battle-btn').disabled = true;
+
+      // バトルエリアを表示
+      document.getElementById('battle-area').classList.add('active');
+      document.getElementById('last-battle').classList.remove('active');
+
+      // 援軍使用時はアイテム消費
+      if (game.itemActive) {
+        game.itemCount--;
+        game.itemActive = false;
+        addLog('🗡️ 援軍の書を使用！', 'event');
+      }
+
+      const myBattleCards = game.selectedCards.map(i => game.myCards[i]);
+      const myTotal = calculatePower(myBattleCards);
+      const enemyTotal = calculatePower(game.enemyCards);
+
+      // バトルアニメーション
+      document.getElementById('battle-my-cards').innerHTML =
+        myBattleCards.map(card => createCardHTML(card, false, -1, false, false, false, true)).join('');
+
+      await sleep(300);
+
+      document.getElementById('battle-enemy-cards').innerHTML =
+        game.enemyCards.map(card => createCardHTML(card, false, -1, false, false, false, true)).join('');
+
+      await sleep(400);
+
+      animateNumber('my-total', 0, myTotal, 300);
+      animateNumber('enemy-total', 0, enemyTotal, 300);
+
+      await sleep(500);
+
+      // 使用したカードを疲労状態に
+      game.selectedCards.forEach(idx => {
+        if (!game.exhaustedCards.includes(idx)) {
+          game.exhaustedCards.push(idx);
+        }
+      });
+
+      const resultEl = document.getElementById('result');
+      let resultText = '';
+      let battleResult = 'draw';
+
+      if (myTotal > enemyTotal) {
+        // 勝利
+        game.enemyHP--;
+        resultText = `✨ 勝利！ (${myTotal} vs ${enemyTotal})`;
+        resultEl.className = 'result win';
+        battleResult = 'win';
+        addLog(`${myTotal} vs ${enemyTotal} で勝利！`, 'good');
+
+        document.querySelectorAll('#battle-enemy-cards .card').forEach(c => c.classList.add('damaged'));
+
+        if (game.enemyHP <= 0) {
+          game.fame += game.enemy.fame;
+          game.wins++;
+          game.exhaustedCards = [];
+
+          if (game.enemy.isBoss) {
+            addLog(`🎉 ${game.enemy.name}を倒した！`, 'good');
+            await sleep(1000);
+            document.getElementById('victory-screen').classList.add('active');
+            return;
+          }
+
+          addLog(`🎉 ${game.enemy.name}を倒した！ (+${game.enemy.fame}名声) 疲労回復！`, 'good');
+
+          await sleep(1500);
+
+          // バトルエリアを非表示
+          document.getElementById('battle-area').classList.remove('active');
+
+          spawnEnemy();
+          document.getElementById('message').textContent = `新たな敵が現れた！`;
+        } else {
+          generateEnemyCards();
+          updateEnemyDisplay();
+        }
+      } else if (myTotal < enemyTotal) {
+        // 敗北
+        resultText = `💥 敗北... (${myTotal} vs ${enemyTotal})`;
+        resultEl.className = 'result lose';
+        battleResult = 'lose';
+        addLog(`${myTotal} vs ${enemyTotal} で敗北...カードを失った`, 'bad');
+
+        document.querySelectorAll('#battle-my-cards .card').forEach(c => c.classList.add('damaged'));
+
+        await sleep(300);
+
+        const sortedSelected = [...game.selectedCards].sort((a, b) => b - a);
+        sortedSelected.forEach(idx => {
+          game.myCards.splice(idx, 1);
+          game.exhaustedCards = game.exhaustedCards
+            .filter(i => i !== idx)
+            .map(i => i > idx ? i - 1 : i);
+        });
+
+        generateEnemyCards();
+        updateEnemyDisplay();
+
+        const availableCount = game.myCards.filter((_, i) => !game.exhaustedCards.includes(i)).length;
+        if (availableCount < game.enemy.cardCount) {
+          await sleep(1000);
+          document.getElementById('gameover-text').textContent = '戦える兵がいなくなった...';
+          document.getElementById('gameover-screen').classList.add('active');
+        }
+      } else {
+        // 引き分け
+        resultText = `🤝 引き分け！ (${myTotal})`;
+        resultEl.className = 'result';
+        addLog(`${myTotal} で引き分け`, 'event');
+
+        generateEnemyCards();
+        updateEnemyDisplay();
+      }
+
+      // 前回のバトル結果を保存
+      game.lastBattle = {
+        myCards: myBattleCards,
+        enemyCards: [...game.enemyCards],
+        myTotal,
+        enemyTotal,
+        result: battleResult
+      };
+
+      resultEl.textContent = resultText;
+      game.selectedCards = [];
+      render();
+
+      // バトル後、少し待ってバトルエリアを非表示
+      await sleep(2000);
+      document.getElementById('battle-area').classList.remove('active');
+      render(); // 前回のバトル結果を表示
+
+      // ランダムイベント
+      if (myTotal > enemyTotal && Math.random() < 0.3 && game.enemyHP > 0) {
+        await sleep(500);
+        triggerRandomEvent();
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function animateNumber(elementId, start, end, duration) {
+      const el = document.getElementById(elementId);
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.floor(start + (end - start) * progress);
+        el.textContent = current;
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    function triggerRandomEvent() {
+      const event = events[Math.floor(Math.random() * events.length)];
+      showEvent(event);
+    }
+
+    function showEvent(event) {
+      document.getElementById('event-icon').textContent = event.icon;
+      document.getElementById('event-title').textContent = event.title;
+      document.getElementById('event-description').textContent = event.description;
+
+      const buttonsHTML = event.choices.map((choice, i) =>
+        `<button class="btn-primary" onclick="handleEventChoice(${i})">${choice.text}</button>`
+      ).join('');
+
+      document.getElementById('event-buttons').innerHTML = buttonsHTML;
+      document.getElementById('event-modal').classList.add('active');
+
+      game.currentEvent = event;
+    }
+
+    function handleEventChoice(choiceIndex) {
+      const choice = game.currentEvent.choices[choiceIndex];
+      const result = choice.action();
+
+      addLog(`${game.currentEvent.icon} ${result}`, 'event');
+
+      document.getElementById('event-modal').classList.remove('active');
+      game.currentEvent = null;
+
+      render();
+      document.getElementById('message').textContent = result;
+    }
+
+    function addLog(text, type = '') {
+      game.battleLog.unshift({ text, type });
+      if (game.battleLog.length > 15) game.battleLog.pop();
+
+      document.getElementById('battle-log').innerHTML = game.battleLog
+        .map(entry => `<div class="log-entry log-${entry.type}">${entry.text}</div>`)
+        .join('');
+    }
+
+    function newGame() {
+      game = {
+        fame: 0,
+        wins: 0,
+        kingdomLevel: 0,
+        myCards: createInitialDeck(),
+        selectedCards: [],
+        exhaustedCards: [],
+        enemy: null,
+        enemyHP: 0,
+        enemyMaxHP: 0,
+        enemyCards: [],
+        battleLog: [],
+        itemCount: 2,
+        itemActive: false,
+        lastBattle: null
+      };
+
+      document.getElementById('battle-area').classList.remove('active');
+      document.getElementById('battle-my-cards').innerHTML = '';
+      document.getElementById('battle-enemy-cards').innerHTML = '';
+      document.getElementById('my-total').textContent = '';
+      document.getElementById('enemy-total').textContent = '';
+      document.getElementById('result').textContent = '';
+      document.getElementById('result').className = 'result';
+      document.getElementById('battle-log').innerHTML = '';
+      document.getElementById('message').textContent = 'カードを選んでバトル！';
+      document.getElementById('victory-screen').classList.remove('active');
+      document.getElementById('gameover-screen').classList.remove('active');
+      document.getElementById('last-battle').classList.remove('active');
+
+      spawnEnemy();
+      render();
+
+      addLog('🏠 冒険が始まった！', 'event');
+    }
+
+    newGame();
+  </script>
+</body>
+</html>
