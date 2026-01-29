@@ -862,7 +862,7 @@
   <div class="victory-screen" id="victory-screen">
     <div class="victory-content">
       <h2>🎊 祝・統一 🎊</h2>
-      <p>北の王国の女王を打ち破り、<br>大陸を統一しました！</p>
+      <p>北の王国を打ち破り、<br>大陸を統一しました！</p>
       <button class="btn-success" onclick="newGame()">もう一度プレイ</button>
     </div>
   </div>
@@ -910,7 +910,7 @@
       knight: { name: '騎士', icon: '🛡️', hp: 2, cardCount: 1, cardRange: [6, 9], fame: 4 },
       knights: { name: '騎士団', icon: '🏇', hp: 3, cardCount: 3, cardRange: [4, 7], fame: 7 },
       dragon: { name: 'ドラゴン', icon: '🐉', hp: 3, cardCount: 2, cardRange: [6, 10], fame: 9 },
-      northKing: { name: '北の王国の女王', icon: '👑', hp: 3, cardCount: 2, cardRange: [8, 12], hasJoker: true, fame: 0, isBoss: true }
+      northKing: { name: '北の王国', icon: '👑', hp: 3, cardCount: 2, cardRange: [8, 12], hasJoker: true, fame: 0, isBoss: true }
     };
 
     // イベントデータ
@@ -1286,19 +1286,13 @@
       updateKingdomLevel();
       updateItemDisplay();
 
-      // 必要枚数（利用可能枚数に応じて調整）
+      // 必要枚数
       const required = getActualRequiredCards();
       document.getElementById('battle-btn').disabled = game.selectedCards.length !== required;
 
-      // カードが0枚、または利用可能カードが足りなければゲームオーバー
-      const availableCount = getAvailableCardCount();
-      const requiredForBattle = getActualRequiredCards();
+      // カードが0枚ならゲームオーバー
       if (game.myCards.length === 0) {
         document.getElementById('gameover-text').textContent = '仲間が全滅した...';
-        document.getElementById('gameover-screen').classList.add('active');
-      } else if (availableCount < requiredForBattle && availableCount < game.myCards.length) {
-        // 疲労でバトルできない場合はゲームオーバー
-        document.getElementById('gameover-text').textContent = '戦える兵がいなくなった...';
         document.getElementById('gameover-screen').classList.add('active');
       }
 
@@ -1389,6 +1383,7 @@
       }
 
       const myBattleCards = game.selectedCards.map(i => game.myCards[i]);
+      const enemyCardsOriginal = [...game.enemyCards]; // バトル前の敵カードを保存
       const myTotal = calculatePower(myBattleCards);
       const enemyTotal = calculatePower(game.enemyCards);
 
@@ -1495,10 +1490,10 @@
         updateEnemyDisplay();
       }
 
-      // 前回のバトル結果を保存
+      // 前回のバトル結果を保存（enemyCardsOriginalはバトル開始時に保存済み）
       game.lastBattle = {
         myCards: myBattleCards,
-        enemyCards: [...game.enemyCards],
+        enemyCards: enemyCardsOriginal,
         myTotal,
         enemyTotal,
         result: battleResult
