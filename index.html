@@ -1193,11 +1193,12 @@
 
     function getActualRequiredCards() {
       if (!game.enemy) return 1;
-      const availableCount = getAvailableCardCount();
+      // 総カード枚数で判定（疲労は無視）
+      const totalCards = game.myCards.length;
       const baseRequired = game.enemy.cardCount;
       const itemBonus = game.itemActive ? 1 : 0;
-      // 利用可能枚数が足りない場合は、出せる分だけでOK
-      return Math.min(baseRequired + itemBonus, availableCount);
+      // 総枚数が足りない場合のみ、出せる分だけでOK
+      return Math.min(baseRequired + itemBonus, totalCards);
     }
 
     function updateEnemyDisplay() {
@@ -1289,9 +1290,15 @@
       const required = getActualRequiredCards();
       document.getElementById('battle-btn').disabled = game.selectedCards.length !== required;
 
-      // カードが0枚ならゲームオーバー
+      // カードが0枚、または利用可能カードが足りなければゲームオーバー
+      const availableCount = getAvailableCardCount();
+      const requiredForBattle = getActualRequiredCards();
       if (game.myCards.length === 0) {
         document.getElementById('gameover-text').textContent = '仲間が全滅した...';
+        document.getElementById('gameover-screen').classList.add('active');
+      } else if (availableCount < requiredForBattle && availableCount < game.myCards.length) {
+        // 疲労でバトルできない場合はゲームオーバー
+        document.getElementById('gameover-text').textContent = '戦える兵がいなくなった...';
         document.getElementById('gameover-screen').classList.add('active');
       }
 
