@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>トランプ王国 - 遊び方</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height: 100vh;
+      color: white;
+      line-height: 1.8;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #ffd700, #fff, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .back-link a {
+      color: #ffd700;
+      text-decoration: none;
+      padding: 8px 20px;
+      border: 1px solid #ffd700;
+      border-radius: 20px;
+      transition: all 0.3s;
+    }
+
+    .back-link a:hover {
+      background: rgba(255, 215, 0, 0.2);
+    }
+
+    section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h2 {
+      color: #ffd700;
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    }
+
+    h3 {
+      color: #51cf66;
+      font-size: 1.1rem;
+      margin: 20px 0 10px 0;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: #ddd;
+    }
+
+    ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+    }
+
+    li {
+      margin-bottom: 8px;
+      color: #ccc;
+    }
+
+    .highlight {
+      background: rgba(255, 215, 0, 0.15);
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 4px solid #ffd700;
+      margin: 15px 0;
+    }
+
+    .card-example {
+      display: inline-block;
+      width: 40px;
+      height: 55px;
+      background: white;
+      border-radius: 5px;
+      text-align: center;
+      line-height: 55px;
+      font-weight: bold;
+      margin: 0 5px;
+      vertical-align: middle;
+    }
+
+    .card-example.red { color: #e74c3c; }
+    .card-example.black { color: #2c3e50; }
+    .card-example.joker {
+      background: linear-gradient(135deg, #ff6b6b, #ffd700, #51cf66);
+      font-size: 0.7rem;
+      line-height: 55px;
+    }
+
+    .enemy-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .enemy-card {
+      background: rgba(139, 0, 0, 0.2);
+      border: 1px solid rgba(255, 100, 100, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .enemy-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .enemy-name {
+      color: #ff6b6b;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .enemy-stats {
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    .event-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .event-card {
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .event-card .icon {
+      font-size: 1.5rem;
+      margin-right: 10px;
+    }
+
+    .event-card .title {
+      color: #ffd700;
+      font-weight: bold;
+    }
+
+    .event-card .desc {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    .tips {
+      background: rgba(81, 207, 102, 0.1);
+      border: 1px solid rgba(81, 207, 102, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .tips h4 {
+      color: #51cf66;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; }
+      section { padding: 15px; }
+      .enemy-list, .event-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>トランプ王国 - 遊び方</h1>
+
+    <div class="back-link">
+      <a href="index.html">ゲームに戻る</a>
+    </div>
+
+    <section>
+      <h2>ゲームの目的</h2>
+      <p>小さな村から始めて、敵を倒しながら名声を上げ、王国を発展させましょう。最終目標は<strong style="color: #ffd700;">北の王国の女王</strong>を倒して大陸を統一することです！</p>
+    </section>
+
+    <section>
+      <h2>基本ルール</h2>
+
+      <h3>カードの強さ</h3>
+      <p>カードには強さがあります。数字が大きいほど強いです。</p>
+      <ul>
+        <li><span class="card-example joker">JKR</span> ジョーカー = <strong>15</strong>（最強！敵専用）</li>
+        <li><span class="card-example red">A</span> エース = <strong>14</strong></li>
+        <li><span class="card-example black">K</span> キング = <strong>13</strong></li>
+        <li><span class="card-example red">Q</span> クイーン = <strong>12</strong></li>
+        <li><span class="card-example black">J</span> ジャック = <strong>11</strong></li>
+        <li><span class="card-example red">10</span>～<span class="card-example black">2</span> = そのままの数字</li>
+      </ul>
+
+      <h3>バトルの流れ</h3>
+      <ol>
+        <li>敵が要求する枚数のカードを選ぶ</li>
+        <li>「バトル」ボタンを押す</li>
+        <li>お互いのカードの合計値を比較</li>
+        <li><strong style="color: #51cf66;">勝利</strong>: 敵のHPが1減る（カードは疲労状態に）</li>
+        <li><strong style="color: #ff6b6b;">敗北</strong>: 使用したカードを失う</li>
+        <li><strong style="color: #ffd700;">引き分け</strong>: 何も起きない（カードは疲労状態に）</li>
+      </ol>
+
+      <div class="highlight">
+        <strong>疲労システム:</strong> 使用したカードは「疲労」状態になり、その敵を倒すまで使えません。敵を倒すと全カードの疲労が回復します。
+      </div>
+
+      <h3>カード枚数が足りない時</h3>
+      <p>手持ちのカードが敵の要求枚数より少ない場合でも、持っている分だけでバトルできます。ただし敵も同じ枚数になるので不利にはなりません。</p>
+    </section>
+
+    <section>
+      <h2>援軍の書</h2>
+      <p>「援軍の書」を使うと、そのバトルで<strong>1枚多く</strong>カードを出せます。</p>
+      <ul>
+        <li>ゲーム開始時に2個所持</li>
+        <li>イベントで追加入手可能</li>
+        <li>強敵との戦いで使うと有利に！</li>
+      </ul>
+      <p>「援軍」ボタンをクリックしてONにしてからカードを選び、バトルしましょう。</p>
+    </section>
+
+    <section>
+      <h2>王国の発展</h2>
+      <p>名声を上げると王国が発展します。</p>
+      <ul>
+        <li><strong>村</strong> (名声 0～): はじまりの村</li>
+        <li><strong>街</strong> (名声 15～): 発展する街</li>
+        <li><strong>国</strong> (名声 35～): 栄光の王国</li>
+      </ul>
+      <p>名声45以上 + 国レベルになると、最終ボス「北の王国の女王」が出現！</p>
+    </section>
+
+    <section>
+      <h2>敵一覧</h2>
+      <div class="enemy-list">
+        <div class="enemy-card">
+          <div class="enemy-icon">🥷</div>
+          <div class="enemy-name">盗賊</div>
+          <div class="enemy-stats">HP: 1 / カード: 1枚<br>強さ: 2～5</div>
+        </div>
+        <div class="enemy-card">
+          <div class="enemy-icon">🗡️</div>
+          <div class="enemy-name">山賊</div>
+          <div class="enemy-stats">HP: 2 / カード: 1枚<br>強さ: 3～7</div>
+        </div>
+        <div class="enemy-card">
+          <div class="enemy-icon">🐺</div>
+          <div class="enemy-name">狼の群れ</div>
+          <div class="enemy-stats">HP: 2 / カード: 2枚<br>強さ: 2～5</div>
+        </div>
+        <div class="enemy-card">
+          <div class="enemy-icon">⚔️</div>
+          <div class="enemy-name">山賊団</div>
+          <div class="enemy-stats">HP: 2 / カード: 2枚<br>強さ: 3～6</div>
+        </div>
+        <div class="enemy-card">
+          <div class="enemy-icon">🛡️</div>
+          <div class="enemy-name">騎士</div>
+          <div class="enemy-stats">HP: 2 / カード: 1枚<br>強さ: 6～9</div>
+        </div>
+        <div class="enemy-card">
+          <div class="enemy-icon">🏇</div>
+          <div class="enemy-name">騎士団</div>
+          <div class="enemy-stats">HP: 3 / カード: 3枚<br>強さ: 4～7</div>
+        </div>
+        <div class="enemy-card">
+          <div class="enemy-icon">🐉</div>
+          <div class="enemy-name">ドラゴン</div>
+          <div class="enemy-stats">HP: 3 / カード: 2枚<br>強さ: 6～10</div>
+        </div>
+        <div class="enemy-card">
+          <div class="enemy-icon">👑</div>
+          <div class="enemy-name">北の王国の女王</div>
+          <div class="enemy-stats">HP: 3 / カード: 2枚<br>強さ: 8～12 (ジョーカーあり)</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>イベント</h2>
+      <p>バトルに勝利すると、30%の確率でイベントが発生します。</p>
+      <div class="event-list">
+        <div class="event-card">
+          <span class="icon">⚔️</span><span class="title">旅の冒険者</span>
+          <div class="desc">強力なカード(10～13)を1枚獲得</div>
+        </div>
+        <div class="event-card">
+          <span class="icon">🦸</span><span class="title">伝説の英雄</span>
+          <div class="desc">エース(A)を獲得！</div>
+        </div>
+        <div class="event-card">
+          <span class="icon">📜</span><span class="title">魔法商人</span>
+          <div class="desc">援軍の書を1個獲得</div>
+        </div>
+        <div class="event-card">
+          <span class="icon">🧳</span><span class="title">旅人</span>
+          <div class="desc">カードを2枚獲得</div>
+        </div>
+        <div class="event-card">
+          <span class="icon">⚒️</span><span class="title">鍛冶屋</span>
+          <div class="desc">2枚のカードを+3強化</div>
+        </div>
+        <div class="event-card">
+          <span class="icon">🎉</span><span class="title">収穫祭</span>
+          <div class="desc">名声+3、カード+1枚</div>
+        </div>
+        <div class="event-card">
+          <span class="icon">🏕️</span><span class="title">休息の時</span>
+          <div class="desc">全カードの疲労回復</div>
+        </div>
+        <div class="event-card">
+          <span class="icon">💰</span><span class="title">商人</span>
+          <div class="desc">弱いカード2枚→強いカード1枚</div>
+        </div>
+        <div class="event-card">
+          <span class="icon">🌪️</span><span class="title">嵐</span>
+          <div class="desc">最も弱いカードを1枚失う</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>攻略のコツ</h2>
+      <div class="tips">
+        <h4>序盤</h4>
+        <ul>
+          <li>盗賊や山賊で手札を減らさないよう慎重に</li>
+          <li>イベントで仲間を増やすチャンスを逃さない</li>
+        </ul>
+      </div>
+      <div class="tips">
+        <h4>中盤</h4>
+        <ul>
+          <li>騎士団(3枚)に備えてカードを温存</li>
+          <li>援軍の書は強敵用に取っておく</li>
+          <li>疲労管理が重要！敵を倒せそうな時は一気に</li>
+        </ul>
+      </div>
+      <div class="tips">
+        <h4>終盤</h4>
+        <ul>
+          <li>北の王国戦前にカードを十分集める</li>
+          <li>エースや強カードを確保しておく</li>
+          <li>援軍の書を1つは残しておくと安心</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>ゲームオーバー条件</h2>
+      <p>手持ちのカードが<strong>0枚</strong>になるとゲームオーバーです。</p>
+      <p>負けても諦めずに「もう一度挑戦」で再チャレンジ！</p>
+    </section>
+
+    <div class="back-link" style="margin-top: 30px;">
+      <a href="index.html">ゲームに戻る</a>
+    </div>
+  </div>
+</body>
+</html>

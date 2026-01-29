@@ -752,7 +752,7 @@
 <body>
   <div class="game-container">
     <h1>👑 トランプ王国 👑</h1>
-    <p class="subtitle">カードを選んで敵を倒せ！北の王国を目指して...</p>
+    <p class="subtitle">カードを選んで敵を倒せ！北の王国を目指して... <a href="manual.html" style="color: #ffd700;">遊び方</a></p>
 
     <!-- ステータスバー -->
     <div class="status-bar">
@@ -1187,19 +1187,35 @@
       }
     }
 
+    function getAvailableCardCount() {
+      return game.myCards.filter((_, i) => !game.exhaustedCards.includes(i)).length;
+    }
+
+    function getActualRequiredCards() {
+      if (!game.enemy) return 1;
+      const availableCount = getAvailableCardCount();
+      const baseRequired = game.enemy.cardCount;
+      const itemBonus = game.itemActive ? 1 : 0;
+      // 利用可能枚数が足りない場合は、出せる分だけでOK
+      return Math.min(baseRequired + itemBonus, availableCount);
+    }
+
     function updateEnemyDisplay() {
       if (!game.enemy) return;
       document.getElementById('enemy-name').textContent = `${game.enemy.icon} ${game.enemy.name}`;
       document.getElementById('enemy-hp-text').textContent = `${game.enemyHP}/${game.enemyMaxHP}`;
       document.getElementById('enemy-hp-fill').style.width = `${(game.enemyHP / game.enemyMaxHP) * 100}%`;
 
+      // 敵のカード枚数も利用可能枚数に合わせる
+      const actualRequired = getActualRequiredCards();
+      while (game.enemyCards.length > actualRequired) {
+        game.enemyCards.pop();
+      }
+
       document.getElementById('enemy-cards').innerHTML =
         game.enemyCards.map(() => createCardHTML({}, false, -1, false, true, false, true)).join('');
 
-      // 援軍使用時は+1枚出せる
-      const baseRequired = game.enemy.cardCount;
-      const required = game.itemActive ? baseRequired + 1 : baseRequired;
-      document.getElementById('required-cards').textContent = required;
+      document.getElementById('required-cards').textContent = actualRequired;
     }
 
     function toggleItem() {
@@ -1249,7 +1265,7 @@
     }
 
     function render() {
-      const availableCount = game.myCards.filter((_, i) => !game.exhaustedCards.includes(i)).length;
+      const availableCount = getAvailableCardCount();
 
       document.getElementById('my-cards').innerHTML =
         game.myCards.map((card, i) => {
@@ -1269,10 +1285,15 @@
       updateKingdomLevel();
       updateItemDisplay();
 
-      // 必要枚数
-      const baseRequired = game.enemy ? game.enemy.cardCount : 1;
-      const required = game.itemActive ? baseRequired + 1 : baseRequired;
+      // 必要枚数（利用可能枚数に応じて調整）
+      const required = getActualRequiredCards();
       document.getElementById('battle-btn').disabled = game.selectedCards.length !== required;
+
+      // カードが0枚ならゲームオーバー
+      if (game.myCards.length === 0) {
+        document.getElementById('gameover-text').textContent = '仲間が全滅した...';
+        document.getElementById('gameover-screen').classList.add('active');
+      }
 
       // 前回のバトル結果表示
       updateLastBattle();
@@ -1321,8 +1342,7 @@
       if (game.exhaustedCards.includes(index)) return;
 
       const pos = game.selectedCards.indexOf(index);
-      const baseRequired = game.enemy ? game.enemy.cardCount : 1;
-      const requiredCards = game.itemActive ? baseRequired + 1 : baseRequired;
+      const requiredCards = getActualRequiredCards();
 
       if (pos === -1) {
         if (game.selectedCards.length < requiredCards) {
@@ -1340,8 +1360,7 @@
     }
 
     async function battle() {
-      const baseRequired = game.enemy.cardCount;
-      const requiredCards = game.itemActive ? baseRequired + 1 : baseRequired;
+      const requiredCards = getActualRequiredCards();
 
       if (game.selectedCards.length !== requiredCards) {
         document.getElementById('message').textContent = `⚠️ ${requiredCards}枚のカードを選んでください！`;
@@ -1424,6 +1443,9 @@
 
           spawnEnemy();
           document.getElementById('message').textContent = `新たな敵が現れた！`;
+
+          // スマホ対応: 新しい敵が見えるようスクロール
+          scrollToEnemy();
         } else {
           generateEnemyCards();
           updateEnemyDisplay();
@@ -1450,10 +1472,10 @@
         generateEnemyCards();
         updateEnemyDisplay();
 
-        const availableCount = game.myCards.filter((_, i) => !game.exhaustedCards.includes(i)).length;
-        if (availableCount < game.enemy.cardCount) {
+        // カードが0枚になったらゲームオーバー
+        if (game.myCards.length === 0) {
           await sleep(1000);
-          document.getElementById('gameover-text').textContent = '戦える兵がいなくなった...';
+          document.getElementById('gameover-text').textContent = '仲間が全滅した...';
           document.getElementById('gameover-screen').classList.add('active');
         }
       } else {
@@ -1484,6 +1506,9 @@
       document.getElementById('battle-area').classList.remove('active');
       render(); // 前回のバトル結果を表示
 
+      // スマホ対応: 敵ステータスが見えるようスクロール
+      scrollToEnemy();
+
       // ランダムイベント
       if (myTotal > enemyTotal && Math.random() < 0.3 && game.enemyHP > 0) {
         await sleep(500);
@@ -1493,6 +1518,11 @@
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function scrollToEnemy() {
+      const enemyArea = document.getElementById('enemy-area');
+      enemyArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function animateNumber(elementId, start, end, duration) {
