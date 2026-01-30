@@ -1179,11 +1179,14 @@
       game.enemyCards = [];
       const [min, max] = game.enemy.cardRange;
 
-      for (let i = 0; i < game.enemy.cardCount; i++) {
+      // プレイヤーの総カード枚数に合わせて敵カード枚数を調整
+      const actualCardCount = Math.min(game.enemy.cardCount, game.myCards.length);
+
+      for (let i = 0; i < actualCardCount; i++) {
         game.enemyCards.push(createRandomCard(min, max));
       }
 
-      if (game.enemy.hasJoker && Math.random() < 0.25) {
+      if (game.enemy.hasJoker && Math.random() < 0.25 && game.enemyCards.length > 0) {
         game.enemyCards[Math.floor(Math.random() * game.enemyCards.length)] = createCard(0, true);
       }
     }
@@ -1208,11 +1211,8 @@
       document.getElementById('enemy-hp-text').textContent = `${game.enemyHP}/${game.enemyMaxHP}`;
       document.getElementById('enemy-hp-fill').style.width = `${(game.enemyHP / game.enemyMaxHP) * 100}%`;
 
-      // 敵のカード枚数も利用可能枚数に合わせる
+      // 必要枚数を計算（敵カード枚数 = プレイヤーが出せる枚数）
       const actualRequired = getActualRequiredCards();
-      while (game.enemyCards.length > actualRequired) {
-        game.enemyCards.pop();
-      }
 
       document.getElementById('enemy-cards').innerHTML =
         game.enemyCards.map(() => createCardHTML({}, false, -1, false, true, false, true)).join('');
